@@ -59,13 +59,17 @@ class Dataset_operator:
         samples.to_csv(f'{self.accumulator_path}/samples.csv', index=False)
         self.size_of_sample = len(samples)
 
+    def rm_samples(self):
+        if os.path.exists(f'{self.accumulator_path}/samples.csv'):
+            os.remove(f'{self.accumulator_path}/samples.csv')
+
     def write_new_set(self, samples: pd.DataFrame):
         self.lock_sets.acquire()
 
         if len(samples) < config.max_samples:
             samples.to_csv(f'{out_initializer.out_sets}/{datetime.timestamp(datetime.now())}.csv', index=False)
             self.size_of_sets += 1
-            self.write_samples(samples[0:0])
+            self.rm_samples()
 
             if config.have_periodicity_all_counters:
                 config.current_period = (config.current_period + 1) % config.periodicity_all_counters
@@ -87,7 +91,7 @@ class Dataset_operator:
                     self.write_samples(df)
 
             if len(samples) % config.max_samples == 0:
-                self.write_samples(samples[0:0])
+                self.rm_samples()
 
         self.lock_sets.release()
 
